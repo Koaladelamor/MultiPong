@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+<title>MultiPong de ENTI</title>
+<script src="//cdn.jsdelivr.net/npm/phaser@3.55.2/dist/phaser.min.js"></script>
+</head>
+
+<body>
+
+<script>
+let game_w = 800;
+let game_h = 450;
+
+let config = {
+	type: Phaser.AUYO,
+	width: 800,
+	height: 450,
+	scene: {
+		create: create_scene,
+		update: update_scene
+	}
+}
+
+let game = new Phaser.Game(config);
+
+let player1;
+let player1_color = 0xffffff;
+
+let player2;
+let player2_color = 0xffffff;
+
+let player_margin = 32;
+let player_w = 16;
+let player_h = 124;
+
+let player_speed = 2;
+
+let ball;
+let ball_color = 0xffffff;
+let ball_w = 16;
+let ball_speed = 2;
+let ball_angle = 45;
+let ball_dir_x = 1;
+let ball_dir_y = 1;
+
+let key_up;
+let key_down;
+let key_w;
+let key_s;
+
+function create_scene()
+{
+	let screen_center_h = game_h/2;
+	let screen_center_w = game_w/2;
+	player1 = this.add.rectangle(player_margin, screen_center_h, player_w, player_h, player1_color);
+	player2 = this.add.rectangle(game_w - player_margin, screen_center_h, player_w, player_h, player2_color);
+	ball = this.add.rectangle(screen_center_w, screen_center_h, ball_w, ball_w, ball_color);
+	
+	key_up = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.UP);
+	key_down = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.DOWN);
+	key_w = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.W);
+	key_s = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.S);
+	
+	ball_angle = Math.floor(Math.random() * 360);
+}
+
+function update_scene()
+{
+	if(key_up.isDown || key_w.isDown){
+		player1.y -= player_speed;
+	}
+	else if(key_down.isDown || key_s.isDown){
+		player1.y += player_speed;
+	}
+
+	if(player1.y - player_h/2 < 0){
+		player1.y = player_h/2;
+	}
+	if(player1.y + player_h/2 > game_h){
+		player1.y = game_h - player_h/2;
+	}
+
+	ball.x += ball_speed * ball_dir_x * Math.cos(ball_angle);
+
+	if(ball.x - ball_w/2 < 0){
+		ball.x = ball_w/2;
+		ball_dir_x = -ball_dir_x;
+	}
+	if(ball.x + ball_w/2 > game_w){
+		ball.x = game_w - ball_w/2;
+		ball_dir_x = -ball_dir_x;
+	}
+
+	ball.y += ball_speed * ball_dir_y * Math.sin(ball_angle);
+
+	if(ball.y - ball_w/2 < 0){
+		ball.y = ball_w/2;
+		ball_dir_y = -ball_dir_y;
+	}
+	if(ball.y + ball_w/2 > game_h){
+		ball.y = game_h - ball_w/2;
+		ball_dir_y = -ball_dir_y;
+	}
+
+	check_collision(player1, player2, ball);
+}
+
+function check_collision(player1, player2, ball)
+{
+	if(ball.x >= player1.x + player_w){
+		ball_dir_x = -ball_dir_x;
+	}
+	if(ball.x <= player2.x + player_w){
+		ball_dir_x = -ball_dir_x;
+	}
+	
+}
+
+</script>
+
+</body>
+
+</html>
