@@ -4,6 +4,9 @@ const http = require('http');
 const http_server = http.createServer(app);
 const { Server } = require("socket.io");
 const io = new Server(http_server);
+let mongo_client = require("mongodb").MongoClient;
+let url = "mongodb://localhost/";
+let db = "multipong";
 
 app.get('/', (req, res) => {
   res.sendFile(__dirname + '/index.html');
@@ -11,6 +14,22 @@ app.get('/', (req, res) => {
 
 http_server.listen(4242, () => {
   console.log('listening on *:4242');
+});
+
+let scores[];
+mongo_client.connect(url, function(error,conn){
+	console.log("Dentro de Mongo >:\)");
+	if (error){
+		console.log("Esto no furula TwT");
+		return;
+	}
+	db = conn.db(db);
+	db.collection("scores")find({}).toArray;
+	dbo.collection("customers").find({}).toArray(function(err, result) {
+	if (err) throw err;
+		console.log(result);
+		db.close();
+	});
 });
 
 let player1;

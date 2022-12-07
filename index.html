@@ -77,6 +77,8 @@ socket.on("game_reset", (msg) => {
 
 }
 
+let game_over = false;
+
 let game_w = 800;
 let game_h = 450;
 
@@ -161,22 +163,31 @@ function update_scene()
 	if(player_num == 0){
 		return;
 	}
-	if(key_up.isDown || key_w.isDown){
-		player.y -= player_speed;
-	}
-	else if(key_down.isDown || key_s.isDown){
-		player.y += player_speed;
-	}
 
-	if(player.y - player_h/2 < 0){
-		player.y = player_h/2;
-	}
-	if(player.y + player_h/2 > game_h){
-		player.y = game_h - player_h/2;
-	}
+	if(!game_over){
+		if(key_up.isDown || key_w.isDown)
+		{
+			player.y -= player_speed;
+		}
+		else if(key_down.isDown || key_s.isDown)
+		{
+			player.y += player_speed;
+		}
 
-	if(player_num == 1){
-		move_ball();
+		if(player.y - player_h/2 < 0)
+		{
+			player.y = player_h/2;
+		}
+		if(player.y + player_h/2 > game_h)
+		{
+			player.y = game_h - player_h/2;
+		}
+
+		if(player_num == 1)
+		{
+			move_ball();
+		}
+
 	}
 
 	check_collision(player1, player2, ball);
@@ -217,12 +228,14 @@ function move_ball(){
 
 	ball.y += ball_speed * ball_dir_y * Math.sin(ball_angle);
 
-	if(ball.y - ball_w/2 < 0){
+	if(ball.y - ball_w/2 < 0)
+	{
 		ball.y = ball_w/2;
 		ball_dir_y = -ball_dir_y;
 	}
 
-	if(ball.y + ball_w/2 > game_h){
+	if(ball.y + ball_w/2 > game_h)
+	{
 		ball.y = game_h - ball_w/2;
 		ball_dir_y = -ball_dir_y;
 	}
@@ -271,28 +284,30 @@ function check_goal()
 		socket.emit("player1_score", player1_score); 
 		console.log("Gol player 1");
 	}
-	
+
 }
 
-function check_game_over(){
+function check_game_over()
+{
 	// Check GameOver
-	if (player1_score >= 5)
+	if (player1_score >= 5 && !game_over)
 	{
 		info_text.setText("Win");		
 		socket.emit("game_over", "player1");
-		ball_speed = 0;
+		game_over = true;
 	}
-	else if(player2_score >= 5)
+	else if(player2_score >= 5 && !game_over)
 	{	
 		info_text.setText("Loose");		
 		socket.emit("game_over", "player2");
-		ball_speed = 0;
+		game_over = true;
 	}
 
 
 }
 
-function reset_variables(){
+function reset_variables()
+{
 	player1_score = 0;
 	player2_score = 0;
 
@@ -309,13 +324,13 @@ function reset_variables(){
 	ball_speed = 4;
 	ball_angle = Math.floor(Math.random() * 360);
 
+	game_over = false;
 }
 
 function update_score(score_p1, score_p2)
 {
 	score_text.setText(score_p1 + " - " + score_p2);
 }
-
 
 </script>
 
