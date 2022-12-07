@@ -44,6 +44,37 @@ socket.on("coords", (msg) => {
 
 	}
 });
+
+socket.on("player1_score", (scoreP1) => {
+	if(player_num == 2){
+		player1_score = parseInt(scoreP1);
+		update_score(player1_score, player2_score);
+	}
+});
+socket.on("player2_score", (scoreP2) => {
+	if(player_num == 2){
+		player2_score = parseInt(scoreP2);
+		update_score(player1_score, player2_score);
+	}
+});
+
+socket.on("game_over", (player) => {
+	if(player_num == 2){
+		if(player == "player1")
+		{
+			info_text.setText("Lose");
+		}
+		else if(player == "player2")
+		{
+			info_text.setText("Win");
+		}
+	}
+});
+
+socket.on("game_reset", (msg) => {
+	reset_variables();	
+});
+
 }
 
 let game_w = 800;
@@ -77,10 +108,18 @@ let player_h = 124;
 
 let player_speed = 2;
 
+let player1_goal = false;
+let player2_goal = false;
+let player1_score = 0;
+let player2_score = 0;
+
+let score_text;
+let info_text;
+
 let ball;
 let ball_color = 0xffffff;
 let ball_w = 16;
-let ball_speed = 3;
+let ball_speed = 5;
 let ball_angle = 45;
 let ball_dir_x = 1;
 let ball_dir_y = 1;
@@ -97,6 +136,15 @@ function create_scene()
 	player1 = this.add.rectangle(player_margin, screen_center_h, player_w, player_h, player1_color);
 	player2 = this.add.rectangle(game_w - player_margin, screen_center_h, player_w, player_h, player2_color);
 	ball = this.add.rectangle(screen_center_w, screen_center_h, ball_w, ball_w, ball_color);
+	score_text = this.add.text(game_w / 2, 10, player1_score + " - " + player2_score, {
+		font: "64px Arial",
+		//align: "center"
+	});
+	info_text = this.add.text(game_w / 2, game_h / 2 - 25, "", {
+		font: "128px Arial",
+		//align: "center"
+	});
+
 	
 	key_up = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.UP);
 	key_down = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.DOWN);
@@ -135,17 +183,20 @@ function update_scene()
 	
 	if(player_num == 1){
 		let coords = '{"player1_y":'+player.y+',"ball_x":'+ball.x+',"ball_y":'+ball.y+'}';
-	//	console.log(coords);
+		//console.log(coords);
 		socket.emit("coords", coords);
 	}
 
 	if(player_num == 2){
 		let coords = '{"player2_y":'+player.y+'}';
-	//	console.log(coords);
+		//console.log(coords);
 		socket.emit("coords", coords);
 	}
 
-	check_goal();
+	if(player_num == 1){
+		check_goal();
+		check_game_over();
+	}
 
 }
 
@@ -200,21 +251,69 @@ function check_goal()
 	// Player 2 score ++
 	if(ball.x < 0)
 	{
-		ball.x = 0;
-		let player2_goal = true;
-		socket.emit("player2_golaso", player2_goal); 
+		ball.x = game_w / 2;
+		ball.y = game_h / 2;
+		ball_angle = Math.floor(Math.random() * 360);
+		player2_score++;
+		update_score(player1_score, player2_score);
+		socket.emit("player2_score", player2_score); 
 		console.log("Gol player 2");
 	}	
 
 	// Player 1 score ++
 	else if(ball.x > game_w)
 	{
-		ball.x = game_w;
-		let player1_goal = true;
-		socket.emit("player1_golaso", player1_goal); 
+		ball.x = game_w / 2;
+		ball.y = game_h / 2;
+		ball_angle = Math.floor(Math.random() * 360);
+		player1_score++;
+		update_score(player1_score, player2_score);
+		socket.emit("player1_score", player1_score); 
 		console.log("Gol player 1");
 	}
+	
+}
 
+function check_game_over(){
+	// Check GameOver
+	if (player1_score >= 5)
+	{
+		info_text.setText("Win");		
+		socket.emit("game_over", "player1");
+		ball_speed = 0;
+	}
+	else if(player2_score >= 5)
+	{	
+		info_text.setText("Loose");		
+		socket.emit("game_over", "player2");
+		ball_speed = 0;
+	}
+
+
+}
+
+function reset_variables(){
+	player1_score = 0;
+	player2_score = 0;
+
+	update_score(player1_score, player2_score);
+
+	info_text.setText("");
+
+	player1.y = game_h / 2;
+	player2.y = game_h / 2;
+
+	ball.x = game_w / 2;
+	ball.y = game_h / 2;
+
+	ball_speed = 4;
+	ball_angle = Math.floor(Math.random() * 360);
+
+}
+
+function update_score(score_p1, score_p2)
+{
+	score_text.setText(score_p1 + " - " + score_p2);
 }
 
 

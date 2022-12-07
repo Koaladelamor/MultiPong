@@ -28,11 +28,29 @@ io.on("connection", (socket) => {
 
 			player2.emit("coords", msg);
 		});
-		player1.on("", (msg) => {
+		player1.on("player1_score", (msg) => {
 			if(player2 == undefined)
 				return;
 
-			player2.emit("coords", msg);
+			player2.emit("player1_score", msg);
+		});
+		player1.on("player2_score", (msg) => {
+			if(player2 == undefined)
+				return;
+
+			player2.emit("player2_score", msg);
+		});
+
+		player1.on("game_over", (msg) => {
+			if(player2 == undefined)
+				return;
+
+			player2.emit("game_over", msg);
+
+			setTimeout(() => {
+				player1.emit("game_reset");
+				player2.emit("game_reset");
+			}, 3000);
 		});
 
 		//console.log("Player 1");
@@ -51,7 +69,7 @@ io.on("connection", (socket) => {
 		//console.log("Player 2");
 	}
 	else{
-		console.log("Sala llena");	
+		console.log("Sala llena");
 		return;
 	}
 
@@ -60,3 +78,6 @@ io.on("connection", (socket) => {
 	});
 
 });
+
+
+// db.scores.insert({"player1":"player1_score", "player2":"player2_score"});
