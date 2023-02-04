@@ -7,7 +7,7 @@ const io = new Server(http_server);
 let mongo_client = require("mongodb").MongoClient;
 let url = "mongodb://localhost/";
 let db = "multipong";
-
+let db_string = "multipong";
 app.get('/', (req, res) => {
   res.sendFile(__dirname + '/index.html');
 });
@@ -16,19 +16,22 @@ http_server.listen(4242, () => {
   console.log('listening on *:4242');
 });
 
-let scores[];
+let scores;
 mongo_client.connect(url, function(error,conn){
 	console.log("Dentro de Mongo >:\)");
 	if (error){
 		console.log("Esto no furula TwT");
 		return;
 	}
-	db = conn.db(db);
-	db.collection("scores")find({}).toArray;
-	dbo.collection("customers").find({}).toArray(function(err, result) {
+	db = conn.db(db_string);
+	//db.collection("scores")find({}).toArray;
+	db.collection("leaderboard").find({}).toArray(function(err, result) {
 	if (err) throw err;
 		console.log(result);
-		db.close();
+		scores = result;
+		//player1.emit("update_leaderboard", scores);
+		//player2.emit("update_leaderboard", scores);
+		//db.close();
 	});
 });
 
@@ -40,6 +43,7 @@ io.on("connection", (socket) => {
 	if(player1 == undefined){
 		player1 = socket;
 		player1.emit("player_num", 1);
+		player1.emit("update_leaderboard", scores);
 
 		player1.on("coords", (msg) => {
 			if(player2 == undefined)
@@ -60,6 +64,42 @@ io.on("connection", (socket) => {
 			player2.emit("player2_score", msg);
 		});
 
+		player1.on("score", (msg) => {
+
+			let message = JSON.parse(msg);
+			let p1score = parseInt(message.p1_score);
+			let p2score = parseInt(message.p2_score);
+			let score = {
+				p1_score : p1score,
+				p2_score : p2score,
+				date: new Date()
+				}
+
+			mongo_client.connect(url, function(error,conn){
+				console.log("Dentro de Mongo >:\)");
+				if (error){
+					console.log("Esto no furula TwT");
+					return;
+				}
+				db = conn.db(db_string);
+				db.collection("leaderboard").insertOne(score, function(err, result) {
+					if (err) throw err;
+					console.log(result);
+					//conn.close();
+				});
+				db.collection("leaderboard").find({}).toArray(function(err, result) {
+					if (err) throw err;
+					console.log(result);
+					// update leaderboard
+					scores = result;
+					player1.emit("update_leaderboard", scores);
+					player2.emit("update_leaderboard", scores);
+					//db.close();
+				});
+
+			});
+		});
+			
 		player1.on("game_over", (msg) => {
 			if(player2 == undefined)
 				return;
@@ -70,6 +110,7 @@ io.on("connection", (socket) => {
 				player1.emit("game_reset");
 				player2.emit("game_reset");
 			}, 3000);
+
 		});
 
 		//console.log("Player 1");
@@ -77,6 +118,7 @@ io.on("connection", (socket) => {
 	else if(player2 == undefined){
 		player2 = socket;
 		player2.emit("player_num", 2);
+		player2.emit("update_leaderboard", scores);
 
 		player2.on("coords", (msg) => {
 			if(player1 == undefined)

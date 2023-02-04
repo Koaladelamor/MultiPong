@@ -12,6 +12,7 @@
 
 <script>
 
+let leaderboard;
 let socket;
 
 function init_socket(){
@@ -73,6 +74,15 @@ socket.on("game_over", (player) => {
 
 socket.on("game_reset", (msg) => {
 	reset_variables();	
+});
+
+socket.on("update_leaderboard", (msg) => {
+	let scoresHTML = "";
+	//console.log(msg);
+	for(let i = 0; i < msg.length; i++){
+		scoresHTML += '<li>'+msg[i].p1_score+' - '+msg[i].p2_score+' : '+msg[i].date+'</li>';
+	}
+	document.getElementById("leaderboard").innerHTML = scoresHTML;
 });
 
 }
@@ -294,12 +304,16 @@ function check_game_over()
 	{
 		info_text.setText("Win");		
 		socket.emit("game_over", "player1");
+		let score = '{"p1_score":'+player1_score+',"p2_score":'+player2_score+'}';
+		socket.emit("score", score);
 		game_over = true;
 	}
 	else if(player2_score >= 5 && !game_over)
 	{	
 		info_text.setText("Loose");		
 		socket.emit("game_over", "player2");
+		let score = '{"p1_score":'+player1_score+',"p2_score":'+player2_score+'}';
+		socket.emit("score", score);
 		game_over = true;
 	}
 
@@ -333,6 +347,12 @@ function update_score(score_p1, score_p2)
 }
 
 </script>
+
+<h2>Leaderboard</h2>
+
+<ul id="leaderboard">
+
+</ul>
 
 </body>
 
